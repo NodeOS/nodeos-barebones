@@ -10,7 +10,19 @@
   },
   "author": "Jesús Leganés Combarro \"piranna\"",
   "license": "MIT",
+  "dependencies": {
+    "nodeos-cross-toolchain": "^0.0.0"
+  },
   "devDependencies": {
-    "suppose": "NodeOS/node-suppose#patch-1"
-  }
+    "suppose": "git+https://github.com/NodeOS/node-suppose#patch-1"
+  },
+  "description": "This package will compile both [Node.js](http://nodejs.org) and [Linux kernel](https://www.kernel.org/) using a cross-compiler for the desired target. Used alone, it will generate a Linux image that by default will boots to a Node.js [REPL](http://nodejs.org/api/repl.html) prompt.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NodeOS/nodeos-barebones.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NodeOS/nodeos-barebones/issues"
+  },
+  "homepage": "https://github.com/NodeOS/nodeos-barebones"
 }

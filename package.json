@@ -4,8 +4,8 @@
   "scripts": {
     "docker": "docker run",
     "dockerBuild": "docker import - barebones < out/latest",
-    "install": "scripts/build",
-    "preinstall": "scripts/preinstall",
+    "build": "scripts/build",
+    "install": "scripts/install",
     "start": "scripts/start",
     "test": "scripts/test",
     "unbuild": "scripts/unbuild"
@@ -22,7 +22,7 @@
     "qemu": "NodeOS/qemu",
     "suppose": "^0.5.1"
   },
-  "description": "This package will compile both [Node.js](http://nodejs.org) and [Linux kernel](https://www.kernel.org/) using a cross-compiler for the desired target. Used alone, it will generate a Linux image that by default will boots to a Node.js [REPL](http://nodejs.org/api/repl.html) prompt.",
+  "description": "Generate a NodeOS barebones image",
   "repository": {
     "type": "git",
     "url": "https://github.com/NodeOS/nodeos-barebones.git"

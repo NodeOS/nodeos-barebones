@@ -28,6 +28,7 @@ function err(){
 OBJ_INIT=$OBJECTS/init
 OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
 OBJ_RELEASE=$OBJECTS/os-release
+OBJ_CPIO_TXT=$OBJECTS/cpio.txt
 OBJ_LINUX=$OBJECTS/linux
 OUT_DIR=`pwd`/out/$CPU
 
@@ -111,6 +112,23 @@ eval "echo \"$(< resources/os-release)\"" > $STEP_DIR || err 30
 
 
 #
+# Generate initramfs configuration file
+#
+
+STEP_DIR=$OBJ_CPIO_TXT
+
+mkdir -p `dirname $STEP_DIR`
+
+cat resources/cpio_root.txt > $STEP_DIR || err 40
+if [[ $PLATFORM != vagga ]]; then
+  eval "echo \"$(< resources/cpio_standalone.txt)\"" >> $STEP_DIR || err 41
+else
+  cat resources/cpio_vagga.txt >> $STEP_DIR || err 42
+fi
+eval "echo \"$(< resources/cpio_common.txt)\"" >> $STEP_DIR || err 43
+
+
+#
 # Wrap the system up and pack it
 #
 
@@ -119,34 +137,25 @@ STEP_DIR=$OBJ_LINUX
 
 mkdir -p $STEP_DIR
 
-# Generate initramfs configuration file
-cat resources/cpio_root.txt > $STEP_DIR/cpio.txt || err 30
-if [[ $PLATFORM != vagga ]]; then
-  eval "echo \"$(< resources/cpio_standalone.txt)\"" >> $STEP_DIR/cpio.txt || err 31
-else
-  cat resources/cpio_vagga.txt >> $STEP_DIR/cpio.txt || err 32
-fi
-eval "echo \"$(< resources/cpio_common.txt)\"" >> $STEP_DIR/cpio.txt || err 33
-
 case $PLATFORM in
   docker|vagga)
     if [[ ! -f $OUT_DIR/barebones.tar ]]; then
       (
         cd $SRC_DIR/usr     &&
-        $MAKE gen_init_cpio || exit 40
+        $MAKE gen_init_cpio || exit 50
 
         mkdir -p         $STEP_DIR/usr &&
-        mv gen_init_cpio $STEP_DIR/usr || exit 41
+        mv gen_init_cpio $STEP_DIR/usr || exit 51
       ) || err $?
 
-      mkdir -p $OUT_DIR                              &&
-      $STEP_DIR/usr/gen_init_cpio $STEP_DIR/cpio.txt | \
-        cpio2tar > $OUT_DIR/barebones.tar            || err 42
+      mkdir -p $OUT_DIR                         &&
+      $STEP_DIR/usr/gen_init_cpio $OBJ_CPIO_TXT | \
+        cpio2tar > $OUT_DIR/barebones.tar       || err 52
 
-      rm -f $STEP_DIR/.config || err 43
+      rm -f $STEP_DIR/.config || err 53
     fi
 
-    ln -sf $CPU/barebones.tar out/latest || err 44
+    ln -sf $CPU/barebones.tar out/latest || err 54
   ;;
 
   pc_* | raspberry_* | versatilepb_*)
@@ -155,7 +164,7 @@ case $PLATFORM in
       echo -e "${WHT}Compiling Linux${CLR}"
 
       # Delete previous products
-      rm -f $OUT_DIR/linux || exit 50
+      rm -f $OUT_DIR/linux || exit 60
 
       MAKE="$MAKE O=$STEP_DIR ARCH=$ARCH CROSS_COMPILE=$TARGET-"
 
@@ -163,7 +172,7 @@ case $PLATFORM in
         cd $SRC_DIR
 
         # Configure
-        $MAKE1 mrproper || exit 51
+        $MAKE1 mrproper || exit 61
 
         case $PLATFORM in
           pc_*)
@@ -176,44 +185,44 @@ case $PLATFORM in
 
           *)
             echo "Unknown platform '$PLATFORM'"
-            exit 52
+            exit 62
           ;;
         esac
 
-        $MAKE $DEFCONFIG || exit 53
-      ) || err $?
+        $MAKE $DEFCONFIG || exit 63
+      ) || exit $?
 
       # Set NodeOS custom configurations
-      eval "echo \"$(< resources/config_common)\"" >> $STEP_DIR/.config || err 54
+      eval "echo \"$(< resources/config_common)\"" >> $STEP_DIR/.config || err 64
 
-      eval "echo \"$(< resources/config_workstation)\"" >> $STEP_DIR/.config || err 54
-#      eval "echo \"$(< resources/config_mainframe)\"" >> $STEP_DIR/.config || err 54
+      eval "echo \"$(< resources/config_workstation)\"" >> $STEP_DIR/.config || err 64
+#      eval "echo \"$(< resources/config_mainframe)\"" >> $STEP_DIR/.config || err 64
 
       (
         cd $SRC_DIR
 
         # Fix and clean configuration
-        $MAKE oldnoconfig || exit 55
+        $MAKE oldnoconfig || exit 65
 
         # Compile
-        $MAKE || exit 56
+        $MAKE || exit 66
       ) || err $?
 
       # Install
-      mkdir -p $OUT_DIR || exit 57
+      mkdir -p $OUT_DIR || exit 67
 
       case $PLATFORM in
         pc_*)
-          cp $STEP_DIR/arch/$ARCH/boot/bzImage $OUT_DIR/linux || exit 58
+          cp $STEP_DIR/arch/$ARCH/boot/bzImage $OUT_DIR/linux || exit 68
         ;;
 
         raspberry_*)
-          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux || exit 48
+          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux || exit 69
         ;;
 
         *)
           echo "Unknown platform '$PLATFORM'"
-          exit 61
+          exit 70
         ;;
       esac
 
@@ -225,7 +234,7 @@ case $PLATFORM in
       i="1"
       while [ `scripts/test --cpu $CPU` ]; do
         if [ $i -eq 5 ]; then
-          exit 62
+          exit 71
         fi
 
         i=$[$i+1]
@@ -235,12 +244,12 @@ case $PLATFORM in
       echo -e "${GRN}Successfully compiled Linux${CLR}"
     fi
 
-    ln -sf $CPU/linux out/latest || exit 63
+    ln -sf $CPU/linux out/latest || exit 72
   ;;
 
   *)
     echo -e "${RED}Unknown platform '$PLATFORM'${CLR}"
-    exit 70
+    exit 80
   ;;
 esac
 

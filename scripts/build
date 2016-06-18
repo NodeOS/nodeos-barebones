@@ -119,13 +119,13 @@ STEP_DIR=$OBJ_CPIO_TXT
 
 mkdir -p `dirname $STEP_DIR`
 
-cat resources/cpio_root.txt > $STEP_DIR || err 40
+cat resources/cpio/root.txt > $STEP_DIR || err 40
 if [[ $PLATFORM != vagga ]]; then
-  eval "echo \"$(< resources/cpio_standalone.txt)\"" >> $STEP_DIR || err 41
+  eval "echo \"$(< resources/cpio/standalone.txt)\"" >> $STEP_DIR || err 41
 else
-  cat resources/cpio_vagga.txt >> $STEP_DIR || err 42
+  cat resources/cpio/vagga.txt >> $STEP_DIR || err 42
 fi
-eval "echo \"$(< resources/cpio_common.txt)\"" >> $STEP_DIR || err 43
+eval "echo \"$(< resources/cpio/common.txt)\"" >> $STEP_DIR || err 43
 
 
 #
@@ -193,10 +193,10 @@ case $PLATFORM in
       ) || exit $?
 
       # Set NodeOS custom configurations
-      eval "echo \"$(< resources/config_common)\"" >> $STEP_DIR/.config || err 64
+      eval "echo \"$(< resources/config/common)\"" >> $STEP_DIR/.config || err 64
 
-      eval "echo \"$(< resources/config_workstation)\"" >> $STEP_DIR/.config || err 64
-#      eval "echo \"$(< resources/config_mainframe)\"" >> $STEP_DIR/.config || err 64
+      eval "echo \"$(< resources/config/workstation)\"" >> $STEP_DIR/.config || err 64
+#      eval "echo \"$(< resources/config/mainframe)\"" >> $STEP_DIR/.config || err 64
 
       (
         cd $SRC_DIR

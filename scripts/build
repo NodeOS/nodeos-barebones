@@ -26,7 +26,7 @@ function err(){
 #
 
 OBJ_INIT=$OBJECTS/init
-OBJ_NODE=`node -p "require('nodejs')"`/bin/$CPU
+OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
 OBJ_RELEASE=$OBJECTS/os-release
 OBJ_LINUX=$OBJECTS/linux
 OUT_DIR=`pwd`/out/$CPU
@@ -78,13 +78,8 @@ if [[ ! -f $STEP_DIR ]]; then
   rm -rf $OBJ_LINUX
 
   # Install
-  npm install         \
-    --quiet --no-spin \
-    --ignore-scripts  \
-    NodeOS/nodejs     || err 20
-
   (
-    cd node_modules/nodejs
+    cd node_modules/nodeos-nodejs
 
     #  CROSS_COMPILE="$TARGET-" \
       CC=$TARGET-gcc           \
@@ -94,7 +89,7 @@ if [[ ! -f $STEP_DIR ]]; then
         --arch=$NODE_ARCH      || exit 20
   ) || err $?
 
-  OBJ_NODE=`node -p "require('nodejs')"`/bin/$CPU
+  OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
 
   echo -e "${GRN}Successfully installed Node.js${CLR}"
 fi

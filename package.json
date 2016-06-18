@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "qemu": "NodeOS/qemu",
-    "suppose": "^0.5.1"
+    "suppose": "^0.5.2"
   },
   "description": "Generate a NodeOS barebones image",
   "repository": {

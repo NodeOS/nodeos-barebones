@@ -45,7 +45,10 @@ exe = suppose(command, args)
   .on('error', function(error)
   {
     if(error.message.indexOf('terminating on signal 15 from pid') < 0)
+    {
       console.trace(error)
+      process.exit(error.code)
+    }
   })
   .end(function()
   {

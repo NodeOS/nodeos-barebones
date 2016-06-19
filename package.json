@@ -1,6 +1,6 @@
 {
   "name": "nodeos-barebones",
-  "version": "1.0.0-RC2",
+  "version": "1.0.0-RC2.0",
   "scripts": {
     "docker": "docker run",
     "dockerBuild": "docker import - barebones < out/latest",
@@ -16,8 +16,8 @@
     "cpio2tar": "^0.0.1",
     "download-manager": "^0.0.20",
     "minimist": "^1.2.0",
-    "nodeos-cross-toolchain": "^1.0.0-RC2",
-    "nodeos-nodejs": "^6.2.2"
+    "nodeos-cross-toolchain": "^1.0.0-RC2.0",
+    "nodeos-nodejs": "^4.4.5"
   },
   "devDependencies": {
     "qemu": "NodeOS/qemu",

@@ -44,7 +44,7 @@ if [[ ! -f $STEP_DIR && $PLATFORM != vagga ]]; then
   echo -e "${WHT}Compiling init${CLR}"
 
   # Delete previous kernel
-  rm -rf $OBJ_LINUX
+  rm -rf ${OBJ_LINUX}_*
 
   (
 #    cd $STEP_DIR
@@ -77,7 +77,7 @@ if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Installing Node.js${CLR}"
 
   # Delete previous kernel
-  rm -rf $OBJ_LINUX
+  rm -rf ${OBJ_LINUX}_*
 
   # Install
   (
@@ -136,12 +136,14 @@ eval "echo \"$(< resources/cpio/common.txt)\"" >> $STEP_DIR || err 43
 SRC_DIR=deps/linux
 STEP_DIR=$OBJ_LINUX
 
-mkdir -p $STEP_DIR
-
 case $PLATFORM in
   docker|vagga)
+    STEP_DIR=${STEP_DIR}_lxc
+
     if [[ ! -f $OUT_DIR/barebones.tar ]]; then
       (
+        mkdir -p $STEP_DIR
+
         cd $SRC_DIR/usr     &&
         $MAKE gen_init_cpio || exit 50
 
@@ -161,8 +163,12 @@ case $PLATFORM in
   ;;
 
   pc_* | raspberry_* | versatilepb_*)
+    STEP_DIR=${STEP_DIR}_native
+
     if [[ ! -d $STEP_DIR ]]; then
       echo -e "${WHT}Compiling Linux${CLR}"
+
+      mkdir -p $STEP_DIR
 
       # Delete previous kernel
       rm -f $OUT_DIR/linux || exit 60

@@ -26,7 +26,7 @@ function err(){
 #
 
 OBJ_INIT=$OBJECTS/init
-OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
+OBJ_NODE=$OBJECTS/node
 OBJ_RELEASE=$OBJECTS/os-release
 OBJ_CPIO_TXT=$OBJECTS/cpio.txt
 OBJ_LINUX=$OBJECTS/linux
@@ -70,6 +70,7 @@ fi
 # Node.js
 #
 
+SRC_NODE=`node -p "require('nodeos-nodejs')"`
 STEP_DIR=$OBJ_NODE
 
 if [[ ! -f $STEP_DIR ]]; then
@@ -80,7 +81,7 @@ if [[ ! -f $STEP_DIR ]]; then
 
   # Install
   (
-    cd node_modules/nodeos-nodejs
+    cd $SRC_NODE
 
     #  CROSS_COMPILE="$TARGET-" \
       CC=$TARGET-gcc           \
@@ -88,9 +89,9 @@ if [[ ! -f $STEP_DIR ]]; then
       npm run install          \
         --                     \
         --arch=$NODE_ARCH      || exit 20
-  ) || err $?
 
-  OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
+      cp $SRC_NODE/bin/$CPU $OBJ_NODE || exit 21
+  ) || err $?
 
   echo -e "${GRN}Successfully installed Node.js${CLR}"
 fi
@@ -152,6 +153,7 @@ case $PLATFORM in
       $STEP_DIR/usr/gen_init_cpio $OBJ_CPIO_TXT | \
         cpio2tar > $OUT_DIR/barebones.tar       || err 52
 
+      # Notify other layers that we don't have a Linux kernel
       rm -f $STEP_DIR/.config || err 53
     fi
 
@@ -159,11 +161,10 @@ case $PLATFORM in
   ;;
 
   pc_* | raspberry_* | versatilepb_*)
-    if [[ `ls $STEP_DIR | wc -l` -eq 1 ]] \
-    || [[ ! -f $OUT_DIR/linux          ]]; then
+    if [[ ! -d $STEP_DIR ]]; then
       echo -e "${WHT}Compiling Linux${CLR}"
 
-      # Delete previous products
+      # Delete previous kernel
       rm -f $OUT_DIR/linux || exit 60
 
       MAKE="$MAKE O=$STEP_DIR ARCH=$ARCH CROSS_COMPILE=$TARGET-"

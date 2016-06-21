@@ -1,6 +1,7 @@
 dir /bin  0555 0 0
 dir /dev  0000 0 0
 dir /lib  0111 0 0
+dir /proc 0000 0 0
 dir /sbin 0100 0 0
 
 

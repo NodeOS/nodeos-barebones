@@ -17,7 +17,7 @@
     "download-manager": "^0.0.20",
     "minimist": "^1.2.0",
     "nodeos-cross-toolchain": "^1.0.0-RC2.0",
-    "nodeos-nodejs": "NodeOS/nodejs"
+    "nodeos-nodejs": "^6.3.0"
   },
   "devDependencies": {
     "qemu": "NodeOS/qemu",

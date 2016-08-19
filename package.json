@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "cpio2tar": "^0.0.1",
-    "download-manager": "^0.0.20",
+    "download-manager": "^0.1.0",
     "minimist": "^1.2.0",
     "nodeos-cross-toolchain": "^1.0.0-RC2.0",
     "nodeos-nodejs": "^6.3.1"

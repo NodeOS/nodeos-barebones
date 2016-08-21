@@ -26,7 +26,7 @@ function err(){
 #
 
 OBJ_INIT=$OBJECTS/init
-OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
+OBJ_NODE=$OBJECTS/node
 OBJ_RELEASE=$OBJECTS/os-release
 OBJ_CPIO_TXT=$OBJECTS/cpio.txt
 OBJ_LINUX=$OBJECTS/linux
@@ -44,7 +44,7 @@ if [[ ! -f $STEP_DIR && $PLATFORM != vagga ]]; then
   echo -e "${WHT}Compiling init${CLR}"
 
   # Delete previous kernel
-  rm -rf $OBJ_LINUX
+  rm -rf ${OBJ_LINUX}_*
 
   (
 #    cd $STEP_DIR
@@ -70,17 +70,18 @@ fi
 # Node.js
 #
 
+SRC_NODE=`node -p "require('nodeos-nodejs')"`
 STEP_DIR=$OBJ_NODE
 
 if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Installing Node.js${CLR}"
 
   # Delete previous kernel
-  rm -rf $OBJ_LINUX
+  rm -rf ${OBJ_LINUX}_*
 
   # Install
   (
-    cd node_modules/nodeos-nodejs
+    cd $SRC_NODE
 
     #  CROSS_COMPILE="$TARGET-" \
       CC=$TARGET-gcc           \
@@ -88,9 +89,9 @@ if [[ ! -f $STEP_DIR ]]; then
       npm run install          \
         --                     \
         --arch=$NODE_ARCH      || exit 20
-  ) || err $?
 
-  OBJ_NODE=`node -p "require('nodeos-nodejs')"`/bin/$CPU
+      cp $SRC_NODE/bin/$CPU $OBJ_NODE || exit 21
+  ) || err $?
 
   echo -e "${GRN}Successfully installed Node.js${CLR}"
 fi
@@ -135,12 +136,14 @@ eval "echo \"$(< resources/cpio/common.txt)\"" >> $STEP_DIR || err 43
 SRC_DIR=deps/linux
 STEP_DIR=$OBJ_LINUX
 
-mkdir -p $STEP_DIR
-
 case $PLATFORM in
   docker|vagga)
+    STEP_DIR=${STEP_DIR}_lxc
+
     if [[ ! -f $OUT_DIR/barebones.tar ]]; then
       (
+        mkdir -p $STEP_DIR
+
         cd $SRC_DIR/usr     &&
         $MAKE gen_init_cpio || exit 50
 
@@ -152,6 +155,7 @@ case $PLATFORM in
       $STEP_DIR/usr/gen_init_cpio $OBJ_CPIO_TXT | \
         cpio2tar > $OUT_DIR/barebones.tar       || err 52
 
+      # Notify other layers that we don't have a Linux kernel
       rm -f $STEP_DIR/.config || err 53
     fi
 
@@ -159,11 +163,14 @@ case $PLATFORM in
   ;;
 
   pc_* | raspberry_* | versatilepb_*)
-    if [[ `ls $STEP_DIR | wc -l` -eq 1 ]] \
-    || [[ ! -f $OUT_DIR/linux          ]]; then
+    STEP_DIR=${STEP_DIR}_native
+
+    if [[ ! -d $STEP_DIR ]]; then
       echo -e "${WHT}Compiling Linux${CLR}"
 
-      # Delete previous products
+      mkdir -p $STEP_DIR
+
+      # Delete previous kernel
       rm -f $OUT_DIR/linux || exit 60
 
       MAKE="$MAKE O=$STEP_DIR ARCH=$ARCH CROSS_COMPILE=$TARGET-"

@@ -5,7 +5,7 @@
     "docker": "docker run",
     "dockerBuild": "docker import - barebones < out/latest",
     "build": "scripts/build",
-    "install": "scripts/install",
+    "prebuild": "scripts/prebuild",
     "start": "scripts/start",
     "test": "scripts/test",
     "unbuild": "scripts/unbuild"
@@ -14,14 +14,14 @@
   "license": "MIT",
   "dependencies": {
     "cpio2tar": "^0.0.1",
-    "download-manager": "^0.0.20",
+    "download-manager": "^0.1.1",
     "minimist": "^1.2.0",
-    "nodeos-cross-toolchain": "^1.0.0-RC2.0",
-    "nodeos-nodejs": "^4.4.5"
+    "nodeos-cross-toolchain": "NodeOS/nodeos-cross-toolchain",
+    "nodeos-nodejs": "^6.4.0"
   },
   "devDependencies": {
     "qemu": "NodeOS/qemu",
-    "suppose": "^0.5.2"
+    "suppose": "^0.6.1"
   },
   "description": "Generate a NodeOS barebones image",
   "repository": {

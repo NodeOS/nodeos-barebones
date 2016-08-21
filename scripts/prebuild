@@ -6,7 +6,7 @@ var manager = require('download-manager')
 // Source versions
 
 const INIT_VERSION  = "master"
-const LINUX_VERSION = "4.6"
+const LINUX_VERSION = "4.7.1"
 
 
 // Source URLs
@@ -17,7 +17,7 @@ const LINUX_URL = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-"+LINUX_VE
 
 // Checksums
 
-const LINUX_SHA256 = 'cca08a5bba56d38dd94332f3927d52889231184ba20081f0bf612d32985d5ff5'
+const LINUX_SHA256 = '3bf449c75723494a55e623afb4e50bca5795f213a51c87e6c031a72cc74f7359'
 
 
 // Patch Linux kernel to add Unicode BMP support on `fbcon`
@@ -54,7 +54,7 @@ var downloads =
 ]
 
 
-manager(downloads, function(error)
+manager(downloads, {path: 'deps'}, function(error)
 {
   if(error)
   {

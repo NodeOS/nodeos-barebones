@@ -48,6 +48,10 @@ var downloads =
       {
         url: 'resources/linux-vagrant.patch',
         strip: 1
+      },
+      {
+	url: 'resources/logo.patch',
+	strip: 1
       }
     ]
   }

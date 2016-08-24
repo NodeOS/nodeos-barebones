@@ -23,6 +23,11 @@ CONFIG_LOGO=y
 # Library routines
 #
 
-CONFIG_FONTS=n     # Select to use default fonts or CJK one
+# NodeOS trick
+#
+# Enabled : use FONT_AUTOSELECT option internally to select 16x16_CJK font
+# Disabled: forced configuration by Linux kernel to use default 8x8 & 8x16 fonts
+CONFIG_FONTS=y
+
 CONFIG_FONT_8x8=n  # y
 CONFIG_FONT_8x16=n # y

@@ -120,13 +120,17 @@ STEP_DIR=$OBJ_CPIO_TXT
 
 mkdir -p `dirname $STEP_DIR`
 
-cat resources/cpio/root.txt > $STEP_DIR || err 40
+BINARY=bin/node
+BINARY_PATH=$OBJ_NODE
+
 if [[ $PLATFORM != vagga ]]; then
-  eval "echo \"$(< resources/cpio/standalone.txt)\"" >> $STEP_DIR || err 41
+  eval "echo \"$(< resources/cpio/standalone.txt)\"" > $STEP_DIR || err 40
 else
-  cat resources/cpio/vagga.txt >> $STEP_DIR || err 42
+  eval "echo \"$(< resources/cpio/vagga.txt)\"" > $STEP_DIR || err 41
 fi
-eval "echo \"$(< resources/cpio/common.txt)\"" >> $STEP_DIR || err 43
+eval "echo \"$(< resources/cpio/version.txt)\"" >> $STEP_DIR || err 42
+
+eval "echo \"$(< resources/cpio/common.txt)\""  >> $STEP_DIR || err 43
 
 
 #

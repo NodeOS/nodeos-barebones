@@ -1,0 +1,6 @@
+#
+# NodeOS version
+#
+
+dir  /etc                                0555 0 0
+file /etc/os-release $OBJECTS/os-release 0444 0 0

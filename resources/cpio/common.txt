@@ -1,5 +1,5 @@
 #
-# Node.js required shared libraries
+# Shared libraries
 #
 
 # musl
@@ -16,15 +16,7 @@ slink /lib/libstdc++.so.6 libstdc++.so.6.0.21 0444 0 0
 
 
 #
-# Node.js binary
+# Main binary
 #
 
-file /bin/node $OBJ_NODE 0555 0 0
-
-
-#
-# NodeOS version
-#
-
-dir  /etc                                0555 0 0
-file /etc/os-release $OBJECTS/os-release 0444 0 0
+file /$BINARY $BINARY_PATH 0555 0 0

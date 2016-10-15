@@ -6,7 +6,7 @@ var manager = require('download-manager')
 // Source versions
 
 const INIT_VERSION  = "master"
-const LINUX_VERSION = "4.7.2"
+const LINUX_VERSION = "4.8.1"
 
 
 // Source URLs
@@ -17,11 +17,11 @@ const LINUX_URL = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-"+LINUX_VE
 
 // Checksums
 
-const LINUX_SHA256 = '6330c47f7f631707b9efa28a504040795aff136b4a3a20d07d072bebdbfcc326'
+const LINUX_SHA256 = '732cf2f5a313c760a94483301c5e0fdad424859e56ebd139728338eba91ccf13'
 
 
 // Patch Linux kernel to add Unicode BMP support on `fbcon`
-const LINUX_CJKTTY_VERSION = "4.7"
+const LINUX_CJKTTY_VERSION = "4.8.1"
 const LINUX_CJKTTY_PATCH = "https://raw.githubusercontent.com/NodeOS/cjktty-patch/master/patches/linux-"+LINUX_CJKTTY_VERSION+"-cjktty.diff"
 
 
@@ -50,8 +50,8 @@ var downloads =
         strip: 1
       },
       {
-	url: 'resources/logo.patch',
-	strip: 1
+        url: 'resources/logo.patch',
+        strip: 1
       }
     ]
   }

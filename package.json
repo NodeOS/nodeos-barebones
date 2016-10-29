@@ -13,13 +13,12 @@
   "author": "Jesús Leganés Combarro 'piranna' <piranna@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "cpio2tar": "^0.0.1",
-    "download-manager": "^0.1.2",
+    "download-manager": "^0.1.3",
     "minimist": "^1.2.0",
-    "nodeos-cross-toolchain": "NodeOS/nodeos-cross-toolchain",
-    "nodeos-nodejs": "^6.4.0"
+    "nodeos-nodejs": "NodeOS/nodejs#raspi2"
   },
   "devDependencies": {
+    "nodeos-cross-toolchain": "NodeOS/nodeos-cross-toolchain#raspi2",
     "qemu": "NodeOS/qemu",
     "suppose": "^0.6.1"
   },

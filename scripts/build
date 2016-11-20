@@ -21,7 +21,7 @@ PATH=$TOOLCHAIN/bin:$PATH
 ) || exit $?
 
 
-while getopts ":k:l:p:" opt; do
+while getopts ":k:l:" opt; do
   case $opt in
     k)
       KERNEL="$OPTARG"  # linux, netbsd, nokernel
@@ -30,22 +30,15 @@ while getopts ":k:l:p:" opt; do
     l)
       LINUX="$OPTARG"  # Location of the (probably patched) Linux kernel sources
     ;;
-
-    p)
-      PLATFORM="$OPTARG"  # lxc, qemu, wsl
-    ;;
   esac
 done
 
 
-# Default kernel and platform
+# Default kernel
 if [[ -z "$KERNEL" ]]; then
   KERNEL=linux
 fi
 
-if [[ -z "$PLATFORM" ]]; then
-  PLATFORM=qemu
-fi
 
 
 #
@@ -145,14 +138,7 @@ mkdir -p `dirname $STEP_DIR`
 BINARY=bin/node
 BINARY_PATH=$OBJ_NODE
 
-if [[ $PLATFORM != vagga ]]; then
-  eval "echo \"$(< resources/cpio/standalone.txt)\"" > $STEP_DIR || err 40
-else
-  eval "echo \"$(< resources/cpio/vagga.txt)\"" > $STEP_DIR || err 41
-fi
-eval "echo \"$(< resources/cpio/version.txt)\"" >> $STEP_DIR || err 42
-
-eval "echo \"$(< resources/cpio/common.txt)\""  >> $STEP_DIR || err 43
+eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
 
 
 #
@@ -163,8 +149,8 @@ SRC_DIR=deps/linux
 STEP_DIR=$OBJ_INITRAMFS
 
 if [[ ! -f $OUT_DIR/barebones.cpio.gz ]]; then
-    # Delete previous kernel
-    rm -rf ${OBJ_LINUX}
+  # Delete previous kernel
+  rm -rf ${OBJ_LINUX}
 
   (
     mkdir -p $STEP_DIR

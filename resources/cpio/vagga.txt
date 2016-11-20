@@ -1,5 +1,0 @@
-#
-# Set init
-#
-
-slink /init $BINARY 0100 0 0

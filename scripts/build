@@ -7,20 +7,6 @@
 set -o pipefail
 
 
-TOOLCHAIN=`node -p "require('nodeos-cross-toolchain')"`
-
-source $TOOLCHAIN/scripts/adjustEnvVars.sh || exit $?
-
-PATH=$TOOLCHAIN/bin:$PATH
-
-
-# Build cross-compiler (if needed)
-(
-  cd $TOOLCHAIN
-  BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run build || exit $?
-) || exit $?
-
-
 while getopts ":k:l:" opt; do
   case $opt in
     k)
@@ -39,6 +25,19 @@ if [[ -z "$KERNEL" ]]; then
   KERNEL=linux
 fi
 
+
+TOOLCHAIN=`node -p "require('nodeos-cross-toolchain')"`
+
+source $TOOLCHAIN/scripts/adjustEnvVars.sh || exit $?
+
+PATH=$TOOLCHAIN/bin:$PATH
+
+
+# Build cross-compiler (if needed)
+(
+  cd $TOOLCHAIN
+  BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run build || exit $?
+) || exit $?
 
 
 #

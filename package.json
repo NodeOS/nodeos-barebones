@@ -13,7 +13,7 @@
   "author": "Jesús Leganés Combarro 'piranna' <piranna@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "cpio2tar": "^0.0.2",
+    "cpio2tar": "^0.0.4",
     "download-manager": "^0.1.2",
     "minimist": "^1.2.0",
     "nodeos-cross-toolchain": "NodeOS/nodeos-cross-toolchain",

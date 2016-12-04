@@ -7,6 +7,25 @@
 set -o pipefail
 
 
+while getopts ":k:l:" opt; do
+  case $opt in
+    k)
+      KERNEL="$OPTARG"  # linux, netbsd, nokernel
+    ;;
+
+    l)
+      LINUX="$OPTARG"  # Location of the (probably patched) Linux kernel sources
+    ;;
+  esac
+done
+
+
+# Default kernel
+if [[ -z "$KERNEL" ]]; then
+  KERNEL=linux
+fi
+
+
 TOOLCHAIN=`node -p "require('nodeos-cross-toolchain')"`
 
 source $TOOLCHAIN/scripts/adjustEnvVars.sh || exit $?
@@ -14,11 +33,13 @@ source $TOOLCHAIN/scripts/adjustEnvVars.sh || exit $?
 PATH=$TOOLCHAIN/bin:$PATH
 
 
-# Clean object dir and return the input error
-function err(){
-  rmStep $STEP_DIR
-  exit $1
-}
+# Build cross-compiler (if needed)
+(
+  cd $TOOLCHAIN
+
+  BITS=$BITS CPU=$CPU LINUX=`pwd`/deps/linux MACHINE=$MACHINE \
+      npm run install --production                            || exit $?
+) || exit $?
 
 
 #
@@ -29,6 +50,7 @@ OBJ_INIT=$OBJECTS/init
 OBJ_NODE=$OBJECTS/node
 OBJ_RELEASE=$OBJECTS/os-release
 OBJ_CPIO_TXT=$OBJECTS/cpio.txt
+OBJ_INITRAMFS=$OBJECTS/initramfs
 OBJ_LINUX=$OBJECTS/linux
 OUT_DIR=`pwd`/out/$CPU
 
@@ -40,11 +62,11 @@ OUT_DIR=`pwd`/out/$CPU
 SRC_DIR=`pwd`/deps/init
 STEP_DIR=$OBJ_INIT
 
-if [[ ! -f $STEP_DIR && $PLATFORM != vagga ]]; then
+if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Compiling init${CLR}"
 
-  # Delete previous kernel
-  rm -rf ${OBJ_LINUX}_*
+  # Delete previous initramfs
+  rm -rf $OUT_DIR/barebones.cpio.gz
 
   (
 #    cd $STEP_DIR
@@ -76,21 +98,15 @@ STEP_DIR=$OBJ_NODE
 if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Installing Node.js${CLR}"
 
-  # Delete previous kernel
-  rm -rf ${OBJ_LINUX}_*
+  # Delete previous initramfs
+  rm -rf $OBJ_INITRAMFS
 
   # Install
   (
     cd $SRC_NODE
+    BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run install --production || exit 20
 
-    #  CROSS_COMPILE="$TARGET-" \
-      CC=$TARGET-gcc           \
-      CXX=$TARGET-g++          \
-      npm run install          \
-        --                     \
-        --arch=$NODE_ARCH      || exit 20
-
-      cp $SRC_NODE/bin/$CPU $OBJ_NODE || exit 21
+    cp bin/$CPU $STEP_DIR || exit 21
   ) || err $?
 
   echo -e "${GRN}Successfully installed Node.js${CLR}"
@@ -123,14 +139,34 @@ mkdir -p `dirname $STEP_DIR`
 BINARY=bin/node
 BINARY_PATH=$OBJ_NODE
 
-if [[ $PLATFORM != vagga ]]; then
-  eval "echo \"$(< resources/cpio/standalone.txt)\"" > $STEP_DIR || err 40
-else
-  eval "echo \"$(< resources/cpio/vagga.txt)\"" > $STEP_DIR || err 41
-fi
-eval "echo \"$(< resources/cpio/version.txt)\"" >> $STEP_DIR || err 42
+eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
 
-eval "echo \"$(< resources/cpio/common.txt)\""  >> $STEP_DIR || err 43
+
+#
+# Generate initramfs
+#
+
+SRC_DIR=deps/linux
+STEP_DIR=$OBJ_INITRAMFS
+
+if [[ ! -d $STEP_DIR ]]; then
+  # Delete previous initramfs and kernel
+  rm -rf $OUT_DIR
+
+  (
+    mkdir -p $STEP_DIR
+
+    cd $SRC_DIR/usr     &&
+    $MAKE gen_init_cpio || exit 50
+
+    mkdir -p         $STEP_DIR/usr &&
+    mv gen_init_cpio $STEP_DIR/usr || exit 51
+  ) || err $?
+
+  mkdir -p $OUT_DIR                         &&
+  $STEP_DIR/usr/gen_init_cpio $OBJ_CPIO_TXT | \
+    gzip > $OUT_DIR/barebones.cpio.gz       || err 52
+fi
 
 
 #
@@ -140,35 +176,11 @@ eval "echo \"$(< resources/cpio/common.txt)\""  >> $STEP_DIR || err 43
 SRC_DIR=deps/linux
 STEP_DIR=$OBJ_LINUX
 
-case $PLATFORM in
-  docker|vagga)
-    STEP_DIR=${STEP_DIR}_lxc
-
-    if [[ ! -f $OUT_DIR/barebones.tar ]]; then
-      (
-        mkdir -p $STEP_DIR
-
-        cd $SRC_DIR/usr     &&
-        $MAKE gen_init_cpio || exit 50
-
-        mkdir -p         $STEP_DIR/usr &&
-        mv gen_init_cpio $STEP_DIR/usr || exit 51
-      ) || err $?
-
-      mkdir -p $OUT_DIR                         &&
-      $STEP_DIR/usr/gen_init_cpio $OBJ_CPIO_TXT | \
-        cpio2tar > $OUT_DIR/barebones.tar       || err 52
-
-      # Notify other layers that we don't have a Linux kernel
-      rm -f $STEP_DIR/.config || err 53
-    fi
-
-    ln -sf $CPU/barebones.tar out/latest || err 54
+case $KERNEL in
+  nokernel)
   ;;
 
-  pc_* | raspberry_* | versatilepb_*)
-    STEP_DIR=${STEP_DIR}_native
-
+  linux)
     if [[ ! -d $STEP_DIR ]]; then
       echo -e "${WHT}Compiling Linux${CLR}"
 
@@ -185,17 +197,27 @@ case $PLATFORM in
         # Configure
         $MAKE1 mrproper || exit 61
 
-        case $PLATFORM in
-          pc_*)
+        case $MACHINE in
+          pc)
             DEFCONFIG=${CPU_FAMILY}_defconfig
           ;;
 
-          raspberry_*)
+          raspi)
             DEFCONFIG=bcm2835_defconfig
           ;;
 
+          raspi2)
+            #DEFCONFIG=bcm2709_defconfig
+            DEFCONFIG=bcm2835_defconfig
+            #DEFCONFIG=bcm2836_defconfig
+          ;;
+
+          raspi3)
+            DEFCONFIG=bcm2837_defconfig
+          ;;
+
           *)
-            echo "Unknown platform '$PLATFORM'"
+            echo "Unknown MACHINE '$MACHINE'"
             exit 62
           ;;
         esac
@@ -222,32 +244,33 @@ case $PLATFORM in
       # Install
       mkdir -p $OUT_DIR || exit 67
 
-      case $PLATFORM in
-        pc_*)
+      case $MACHINE in
+        pc)
           cp $STEP_DIR/arch/$ARCH/boot/bzImage $OUT_DIR/linux || exit 68
         ;;
 
-        raspberry_*)
-          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux || exit 69
+        raspi|raspi2|raspi3)
+          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux &&
+          cp $STEP_DIR/arch/$ARCH/boot/dts    $OUT_DIR       || exit 69
         ;;
 
         *)
-          echo "Unknown platform '$PLATFORM'"
+          echo "Unknown MACHINE '$MACHINE'"
           exit 70
         ;;
       esac
 
       echo -e "${GRN}Successfully compiled Linux${CLR}"
     fi
-
-    ln -sf $CPU/linux out/latest || exit 72
   ;;
 
   *)
-    echo -e "${RED}Unknown platform '$PLATFORM'${CLR}"
+    echo -e "${RED}Unknown KERNEL '$KERNEL'${CLR}"
     exit 80
   ;;
 esac
 
+
+ln -sf $CPU out/latest || err 90
 
 echo -e "${GRN}Successfully built 'barebones'${CLR}"

@@ -36,7 +36,9 @@ PATH=$TOOLCHAIN/bin:$PATH
 # Build cross-compiler (if needed)
 (
   cd $TOOLCHAIN
-  BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run build || exit $?
+
+  BITS=$BITS CPU=$CPU LINUX=`pwd`/deps/linux MACHINE=$MACHINE \
+      npm run install --production                            || exit $?
 ) || exit $?
 
 
@@ -97,12 +99,12 @@ if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Installing Node.js${CLR}"
 
   # Delete previous initramfs
-  rm -rf $OUT_DIR/barebones.cpio.gz
+  rm -rf $OBJ_INITRAMFS
 
   # Install
   (
     cd $SRC_NODE
-    BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run build || exit 20
+    BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run install --production || exit 20
 
     cp bin/$CPU $STEP_DIR || exit 21
   ) || err $?
@@ -147,9 +149,9 @@ eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
 SRC_DIR=deps/linux
 STEP_DIR=$OBJ_INITRAMFS
 
-if [[ ! -f $OUT_DIR/barebones.cpio.gz ]]; then
-  # Delete previous kernel
-  rm -rf ${OBJ_LINUX}
+if [[ ! -d $STEP_DIR ]]; then
+  # Delete previous initramfs and kernel
+  rm -rf $OUT_DIR
 
   (
     mkdir -p $STEP_DIR

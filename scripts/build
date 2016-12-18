@@ -104,7 +104,7 @@ if [[ ! -f $STEP_DIR ]]; then
   # Install
   (
     cd $SRC_NODE
-    BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm run install --production || exit 20
+    npm run install --arch=$NODE_ARCH --production || exit 20
 
     cp bin/$CPU $STEP_DIR || exit 21
   ) || err $?

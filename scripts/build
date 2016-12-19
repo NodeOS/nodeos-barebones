@@ -187,7 +187,7 @@ case $KERNEL in
       mkdir -p $STEP_DIR
 
       # Delete previous kernel
-      rm -f $OUT_DIR/linux || exit 60
+      rm -f $OUT_DIR/linux $OUT_DIR/dts || exit 60
 
       MAKE="$MAKE O=$STEP_DIR ARCH=$ARCH CROSS_COMPILE=$TARGET-"
 
@@ -250,13 +250,15 @@ case $KERNEL in
         ;;
 
         raspi|raspi2|raspi3)
-          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux &&
-          cp $STEP_DIR/arch/$ARCH/boot/dts    $OUT_DIR       || exit 69
+          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux || exit 69
+
+          mkdir -p $OUT_DIR/dts                               &&
+          cp $STEP_DIR/arch/$ARCH/boot/dts/*.dtb $OUT_DIR/dts || exit 70
         ;;
 
         *)
           echo "Unknown MACHINE '$MACHINE'"
-          exit 70
+          exit 71
         ;;
       esac
 

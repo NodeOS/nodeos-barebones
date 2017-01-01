@@ -33,13 +33,13 @@ source $TOOLCHAIN/scripts/adjustEnvVars.sh || exit $?
 PATH=$TOOLCHAIN/bin:$PATH
 
 
-# Build cross-compiler (if needed)
-(
-  cd $TOOLCHAIN
+#
+# Define source code paths
+#
 
-  BITS=$BITS CPU=$CPU LINUX=`pwd`/deps/linux MACHINE=$MACHINE \
-      npm run install --production                            || exit $?
-) || exit $?
+SRC_INIT=`pwd`/deps/init
+SRC_NODE=`node -p "require('nodeos-nodejs')"`
+SRC_LINUX=`pwd`/deps/linux
 
 
 #
@@ -50,16 +50,28 @@ OBJ_INIT=$OBJECTS/init
 OBJ_NODE=$OBJECTS/node
 OBJ_RELEASE=$OBJECTS/os-release
 OBJ_CPIO_TXT=$OBJECTS/cpio.txt
-OBJ_INITRAMFS=$OBJECTS/initramfs
+OBJ_GEN_INIT_CPIO=$OBJECTS/gen_init_cpio
 OBJ_LINUX=$OBJECTS/linux
 OUT_DIR=`pwd`/out/$CPU
+
+
+#
+# Build cross-compiler (if needed)
+#
+
+(
+  cd $TOOLCHAIN
+
+  LINUX=$SRC_LINUX                                              \
+  BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm install --production || exit $?
+) || exit $?
 
 
 #
 # init
 #
 
-SRC_DIR=`pwd`/deps/init
+SRC_DIR=$SRC_INIT
 STEP_DIR=$OBJ_INIT
 
 if [[ ! -f $STEP_DIR ]]; then
@@ -92,19 +104,19 @@ fi
 # Node.js
 #
 
-SRC_NODE=`node -p "require('nodeos-nodejs')"`
+SRC_DIR=$SRC_NODE
 STEP_DIR=$OBJ_NODE
 
 if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Installing Node.js${CLR}"
 
   # Delete previous initramfs
-  rm -rf $OBJ_INITRAMFS
+  rm -rf $OBJ_GEN_INIT_CPIO
 
   # Install
   (
-    cd $SRC_NODE
-    npm run install --arch=$NODE_ARCH --production || exit 20
+    cd $SRC_DIR
+    npm install --arch=$NODE_ARCH --production || exit 20
 
     cp bin/$CPU $STEP_DIR || exit 21
   ) || err $?
@@ -146,26 +158,23 @@ eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
 # Generate initramfs
 #
 
-SRC_DIR=deps/linux
-STEP_DIR=$OBJ_INITRAMFS
+SRC_DIR=$SRC_LINUX
+STEP_DIR=$OBJ_GEN_INIT_CPIO
 
-if [[ ! -d $STEP_DIR ]]; then
+if [[ ! -f $STEP_DIR ]]; then
   # Delete previous initramfs and kernel
   rm -rf $OUT_DIR
 
   (
-    mkdir -p $STEP_DIR
-
     cd $SRC_DIR/usr     &&
     $MAKE gen_init_cpio || exit 50
 
-    mkdir -p         $STEP_DIR/usr &&
-    mv gen_init_cpio $STEP_DIR/usr || exit 51
+    mkdir -p `dirname $STEP_DIR` &&
+    mv gen_init_cpio  $STEP_DIR  || exit 51
   ) || err $?
 
-  mkdir -p $OUT_DIR                         &&
-  $STEP_DIR/usr/gen_init_cpio $OBJ_CPIO_TXT | \
-    gzip > $OUT_DIR/barebones.cpio.gz       || err 52
+  mkdir -p $OUT_DIR                                           &&
+  $STEP_DIR $OBJ_CPIO_TXT | gzip > $OUT_DIR/barebones.cpio.gz || err 52
 fi
 
 
@@ -173,7 +182,7 @@ fi
 # Wrap the system up and pack it
 #
 
-SRC_DIR=deps/linux
+SRC_DIR=$SRC_LINUX
 STEP_DIR=$OBJ_LINUX
 
 case $KERNEL in
@@ -246,11 +255,11 @@ case $KERNEL in
 
       case $MACHINE in
         pc)
-          cp $STEP_DIR/arch/$ARCH/boot/bzImage $OUT_DIR/linux || exit 68
+          cp $STEP_DIR/arch/$ARCH/boot/bzImage $OUT_DIR || exit 68
         ;;
 
         raspi|raspi2|raspi3)
-          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR/linux || exit 69
+          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR || exit 69
 
           mkdir -p $OUT_DIR/dts                               &&
           cp $STEP_DIR/arch/$ARCH/boot/dts/*.dtb $OUT_DIR/dts || exit 70
@@ -273,6 +282,6 @@ case $KERNEL in
 esac
 
 
-ln -sf $CPU out/latest || err 90
+ln -sfn $CPU out/latest || err 90
 
 echo -e "${GRN}Successfully built 'barebones'${CLR}"

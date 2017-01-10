@@ -1,6 +1,6 @@
 {
   "name": "nodeos-barebones",
-  "version": "1.0.0-RC3",
+  "version": "1.0.0-RC3.0",
   "scripts": {
     "build": "scripts/build",
     "prebuild": "scripts/prebuild",

@@ -46,6 +46,8 @@ SRC_LINUX=`pwd`/deps/linux
 # Define steps paths
 #
 
+NODE_PLATFORM=linux
+
 OBJ_INIT=$OBJECTS/init
 OBJ_NODE=$OBJECTS/node
 OBJ_RELEASE=$OBJECTS/os-release
@@ -53,6 +55,7 @@ OBJ_CPIO_TXT=$OBJECTS/cpio.txt
 OBJ_GEN_INIT_CPIO=$OBJECTS/gen_init_cpio
 OBJ_LINUX=$OBJECTS/linux
 OUT_DIR=`pwd`/out/$CPU
+PREBUILD=prebuilds/$NODE_PLATFORM-$NODE_ARCH.tar.gz
 
 
 #
@@ -163,7 +166,7 @@ STEP_DIR=$OBJ_GEN_INIT_CPIO
 
 if [[ ! -f $STEP_DIR ]]; then
   # Delete previous initramfs and kernel
-  rm -rf $OUT_DIR
+  rmStep $OUT_DIR $PREBUILD
 
   (
     cd $SRC_DIR/usr     &&
@@ -285,3 +288,15 @@ esac
 ln -sfn $CPU out/latest || err 90
 
 echo -e "${GRN}Successfully built 'barebones'${CLR}"
+
+
+#
+# Pack Node.js in a node-gyp compatible way
+#
+
+# TODO use Node.js arch instead of explicit CPUs and move to BigRedButton
+
+STEP_DIR=$PREBUILD
+
+mkdir -p `dirname $STEP_DIR`          &&
+tar -cf - out/$CPU | gzip > $STEP_DIR || err 100

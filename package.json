@@ -23,8 +23,8 @@
   "devDependencies": {
     "download-manager": "^0.1.3",
     "minimist": "^1.2.0",
-    "nodeos-cross-toolchain": "^1.0.0-RC3.0",
-    "nodeos-nodejs": "NodeOS/nodejs",
+    "nodeos-cross-toolchain": "^1.0.0-RC3.1",
+    "nodeos-nodejs": "^6.9.5-0",
     "prebuild": "^6.0.0",
     "qemu": "^2.8.0",
     "suppose": "^0.6.1"

@@ -5,7 +5,7 @@
     "BigRedButton": "scripts/BigRedButton",
     "build": "scripts/build",
     "prebuild": "scripts/prebuild",
-    "install": "prebuild-install || (buildDependencies && npm run build)",
+    "install": "prebuild-install -d https://github.com/NodeOS/nodeos-barebones/releases/download/v{version}/{platform}-{arch}.tar.gz || (buildDependencies && npm run build)",
     "start": "scripts/start",
     "test": "scripts/test",
     "unbuild": "scripts/unbuild"

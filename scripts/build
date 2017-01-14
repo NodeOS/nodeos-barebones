@@ -291,7 +291,7 @@ echo -e "${GRN}Successfully built 'barebones'${CLR}"
 
 
 #
-# Pack Node.js in a node-gyp compatible way
+# Pack `nodeos-barebones` in a node-gyp compatible way
 #
 
 # TODO use Node.js arch instead of explicit CPUs and move to BigRedButton
@@ -299,4 +299,4 @@ echo -e "${GRN}Successfully built 'barebones'${CLR}"
 STEP_DIR=$PREBUILD
 
 mkdir -p `dirname $STEP_DIR`          &&
-tar -cf - out/$CPU | gzip > $STEP_DIR || err 100
+tar -cf - out/$CPU out/latest | gzip > $STEP_DIR || err 100

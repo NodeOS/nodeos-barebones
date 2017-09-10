@@ -115,7 +115,7 @@ if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Installing Node.js${CLR}"
 
   # Delete previous initramfs
-  rm -rf $OBJ_GEN_INIT_CPIO
+  rm -rf $OUT_INITRAM
 
   # Install
   (
@@ -135,13 +135,18 @@ fi
 
 STEP_DIR=$OBJ_RELEASE
 
-mkdir -p `dirname $STEP_DIR`
+if [[ ! -f $STEP_DIR ]]; then
+  # Delete previous initramfs
+  rm -rf $OUT_INITRAM
 
-VERSION=`node -p "require('./package.json').version"` || VERSION="(unknown)"
-CODENAME="Amanda"
-BUILD_ID=`node -p "(new Date()).toISOString().substr(0,10)"`
+  mkdir -p `dirname $STEP_DIR`
 
-eval "echo \"$(< resources/os-release)\"" > $STEP_DIR || err 30
+  VERSION=`node -p "require('./package.json').version"` || VERSION="(unknown)"
+  CODENAME="Amanda"
+  BUILD_ID=`node -p "(new Date()).toISOString().substr(0,10)"`
+
+  eval "echo \"$(< resources/os-release)\"" > $STEP_DIR || err 30
+fi
 
 
 #
@@ -150,16 +155,21 @@ eval "echo \"$(< resources/os-release)\"" > $STEP_DIR || err 30
 
 STEP_DIR=$OBJ_CPIO_TXT
 
-mkdir -p `dirname $STEP_DIR`
+if [[ ! -f $STEP_DIR ]]; then
+  # Delete previous initramfs
+  rm -rf $OUT_INITRAM
 
-BINARY=bin/node
-BINARY_PATH=$OBJ_NODE
+  mkdir -p `dirname $STEP_DIR`
 
-eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
+  BINARY=bin/node
+  BINARY_PATH=$OBJ_NODE
+
+  eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
+fi
 
 
 #
-# Generate initramfs
+# gen_init_cpio
 #
 
 SRC_DIR=$LINUX
@@ -167,7 +177,7 @@ STEP_DIR=$OBJ_GEN_INIT_CPIO
 
 if [[ ! -f $STEP_DIR ]]; then
   # Delete previous initramfs and kernel
-  rmStep $OUT_DIR $PREBUILD
+  rmStep $OUT_INITRAM
 
   (
     cd $SRC_DIR/usr     &&
@@ -176,18 +186,27 @@ if [[ ! -f $STEP_DIR ]]; then
     mkdir -p `dirname $STEP_DIR` &&
     mv gen_init_cpio  $STEP_DIR  || exit 51
   ) || err $?
+fi
 
-  mkdir -p $OUT_DIR                                           &&
-  $STEP_DIR $OBJ_CPIO_TXT | gzip > $OUT_DIR/barebones.cpio.gz || err 52
+
+#
+# Generate initramfs
+#
+
+STEP_DIR=$OUT_INITRAM
+
+if [[ ! -f $STEP_DIR ]]; then
+  # Delete previous initramfs and kernel
+  rmStep $OUT_DIR $PREBUILD
+
+  mkdir -p `dirname $STEP_DIR`                        &&
+  $OBJ_GEN_INIT_CPIO $OBJ_CPIO_TXT | gzip > $STEP_DIR || err 52
 fi
 
 
 #
 # Wrap the system up and pack it
 #
-
-SRC_DIR=$SRC_LINUX
-STEP_DIR=$OBJ_LINUX
 
 case $KERNEL in
   nokernel)

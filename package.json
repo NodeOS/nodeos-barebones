@@ -17,10 +17,12 @@
     "prebuild-install": "^2.1.0"
   },
   "buildDependencies": [
+    "barebonesos-linux",
     "download-manager",
     "nodeos-nodejs"
   ],
   "devDependencies": {
+    "barebonesos-linux": "^1.1.1",
     "ci-publish": "^1.3.0",
     "download-manager": "^0.1.3",
     "minimist": "^1.2.0",

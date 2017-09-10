@@ -39,7 +39,7 @@ PATH=$TOOLCHAIN/bin:$PATH
 
 SRC_INIT=`pwd`/deps/init
 SRC_NODE=`node -p "require('nodeos-nodejs')"`
-SRC_LINUX=`pwd`/deps/linux
+LINUX=${LINUX:-`node -p "require('nodeos-linux')"`/linux}
 
 
 #
@@ -53,8 +53,9 @@ OBJ_NODE=$OBJECTS/node
 OBJ_RELEASE=$OBJECTS/os-release
 OBJ_CPIO_TXT=$OBJECTS/cpio.txt
 OBJ_GEN_INIT_CPIO=$OBJECTS/gen_init_cpio
-OBJ_LINUX=$OBJECTS/linux
 OUT_DIR=`pwd`/out/$CPU
+OUT_INITRAM=$OUT_DIR/barebones.cpio.gz
+OUT_LINUX=$OUT_DIR/linux
 PREBUILD=prebuilds/$NODE_PLATFORM-$NODE_ARCH.tar.gz
 
 
@@ -65,7 +66,7 @@ PREBUILD=prebuilds/$NODE_PLATFORM-$NODE_ARCH.tar.gz
 (
   cd $TOOLCHAIN
 
-  LINUX=$SRC_LINUX                                              \
+  LINUX=$LINUX                                                  \
   BITS=$BITS CPU=$CPU MACHINE=$MACHINE npm install --production || exit $?
 ) || exit $?
 
@@ -81,7 +82,7 @@ if [[ ! -f $STEP_DIR ]]; then
   echo -e "${WHT}Compiling init${CLR}"
 
   # Delete previous initramfs
-  rm -rf $OUT_DIR/barebones.cpio.gz
+  rm -rf $OUT_INITRAM
 
   (
 #    cd $STEP_DIR
@@ -161,7 +162,7 @@ eval "echo \"$(< resources/cpio.txt)\"" > $STEP_DIR || err 40
 # Generate initramfs
 #
 
-SRC_DIR=$SRC_LINUX
+SRC_DIR=$LINUX
 STEP_DIR=$OBJ_GEN_INIT_CPIO
 
 if [[ ! -f $STEP_DIR ]]; then
@@ -193,99 +194,28 @@ case $KERNEL in
   ;;
 
   linux)
+    STEP_DIR=$OUT_LINUX
+
     if [[ ! -d $STEP_DIR ]]; then
-      echo -e "${WHT}Compiling Linux${CLR}"
+      # Delete previous prebuild images
+      rmStep $PREBUILD
 
-      mkdir -p $STEP_DIR
-
-      # Delete previous kernel
-      rm -f $OUT_DIR/linux $OUT_DIR/dts || exit 60
-
-      MAKE="$MAKE O=$STEP_DIR ARCH=$ARCH CROSS_COMPILE=$TARGET-"
-
-      (
-        cd $SRC_DIR
-
-        # Configure
-        $MAKE1 mrproper || exit 61
-
-        case $MACHINE in
-          pc)
-            DEFCONFIG=${CPU_FAMILY}_defconfig
-          ;;
-
-          raspi)
-            DEFCONFIG=bcm2835_defconfig
-          ;;
-
-          raspi2)
-            #DEFCONFIG=bcm2709_defconfig
-            DEFCONFIG=bcm2835_defconfig
-            #DEFCONFIG=bcm2836_defconfig
-          ;;
-
-          raspi3)
-            DEFCONFIG=bcm2837_defconfig
-          ;;
-
-          *)
-            echo "Unknown MACHINE '$MACHINE'"
-            exit 62
-          ;;
-        esac
-
-        $MAKE $DEFCONFIG || exit 63
-      ) || exit $?
-
-      # Set NodeOS custom configurations
-      eval "echo \"$(< resources/config/common)\"" >> $STEP_DIR/.config || err 64
-
-      eval "echo \"$(< resources/config/workstation)\"" >> $STEP_DIR/.config || err 64
-#      eval "echo \"$(< resources/config/mainframe)\"" >> $STEP_DIR/.config || err 64
-
-      (
-        cd $SRC_DIR
-
-        # Fix and clean configuration
-        $MAKE oldnoconfig || exit 65
-
-        # Compile
-        $MAKE || exit 66
-      ) || err $?
-
-      # Install
-      mkdir -p $OUT_DIR || exit 67
-
-      case $MACHINE in
-        pc)
-          cp $STEP_DIR/arch/$ARCH/boot/bzImage $OUT_DIR || exit 68
-        ;;
-
-        raspi|raspi2|raspi3)
-          cp $STEP_DIR/arch/$ARCH/boot/zImage $OUT_DIR || exit 69
-
-          mkdir -p $OUT_DIR/dts                               &&
-          cp $STEP_DIR/arch/$ARCH/boot/dts/*.dtb $OUT_DIR/dts || exit 70
-        ;;
-
-        *)
-          echo "Unknown MACHINE '$MACHINE'"
-          exit 71
-        ;;
-      esac
-
-      echo -e "${GRN}Successfully compiled Linux${CLR}"
+      barebonesos-linux                   \
+          -c resources/config/workstation \
+          -i $OUT_INITRAM                 \
+          -l $LINUX                       \
+          -o $STEP_DIR                    || err 60
     fi
   ;;
 
   *)
     echo -e "${RED}Unknown KERNEL '$KERNEL'${CLR}"
-    exit 80
+    err 61
   ;;
 esac
 
 
-ln -sfn $CPU out/latest || err 90
+ln -sfn $CPU out/latest || err 70
 
 echo -e "${GRN}Successfully built 'barebones'${CLR}"
 
@@ -298,5 +228,5 @@ echo -e "${GRN}Successfully built 'barebones'${CLR}"
 
 STEP_DIR=$PREBUILD
 
-mkdir -p `dirname $STEP_DIR`          &&
-tar -cf - out/$CPU out/latest | gzip > $STEP_DIR || err 100
+mkdir -p `dirname $STEP_DIR`                     &&
+tar -cf - out/$CPU out/latest | gzip > $STEP_DIR || err 80

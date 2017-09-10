@@ -30,7 +30,7 @@ var args =
 [
 //  '-enable-kvm',  // Give problems running inside VMs, like Travis-CI
   '-nographic',
-  '--kernel', 'out/'+cpu+'/bzImage',
+  '--kernel', 'out/'+cpu+'/linux/bzImage',
   '-append',  'console=ttyS0'
 ]
 

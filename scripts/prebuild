@@ -1,61 +1,27 @@
 #!/usr/bin/env node
 
-var manager = require('download-manager')
+const manager = require('download-manager')
 
 
 // Source versions
 
-const INIT_VERSION  = "master"
-const LINUX_VERSION = "4.8.5"
+const INIT_VERSION = "master"
 
 
 // Source URLs
 
-const INIT_URL  = "https://github.com/piranna/nodeos-init/archive/"+INIT_VERSION+".tar.gz"
-const LINUX_URL = "https://www.kernel.org/pub/linux/kernel/v4.x/linux-"+LINUX_VERSION+".tar.gz"
-
-
-// Checksums
-
-const LINUX_SHA256 = 'b8dd5365c9f4319d41781f65f27b116ae7981d791bbad46491617fee0f87f8cc'
-
-
-// Patch Linux kernel to add Unicode BMP support on `fbcon`
-const LINUX_CJKTTY_VERSION = "4.8.1"
-const LINUX_CJKTTY_PATCH = "https://raw.githubusercontent.com/NodeOS/cjktty-patch/master/patches/linux-"+LINUX_CJKTTY_VERSION+"-cjktty.diff"
+const INIT_URL = "https://github.com/piranna/nodeos-init/archive/"+INIT_VERSION+".tar.gz"
 
 
 //
-// Node.js
+// Download nodeos-init
 //
 
-var downloads =
-[
-  {
-    name: 'init',
-    url: INIT_URL
-  },
-  {
-    name: 'linux',
-    url: LINUX_URL,
-    sha256: LINUX_SHA256,
-    patch:
-    [
-      {
-        url: LINUX_CJKTTY_PATCH,
-        strip: 1
-      },
-      {
-        url: 'resources/linux-vagrant.patch',
-        strip: 1
-      },
-      {
-        url: 'resources/logo.patch',
-        strip: 1
-      }
-    ]
-  }
-]
+const downloads =
+{
+  name: 'init',
+  url: INIT_URL
+}
 
 
 manager(downloads, {path: 'deps'}, function(error)

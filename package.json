@@ -29,7 +29,7 @@
     "nodeos-cross-toolchain": "^1.0.0-RC3.1",
     "nodeos-nodejs": "^8.4.0",
     "prebuild": "^6.2.1",
-    "qemu": "^2.9.0",
+    "qemu": "^2.11.1",
     "suppose": "^0.6.2"
   },
   "description": "Generate a NodeOS barebones image",

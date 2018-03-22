@@ -2,6 +2,8 @@
 
 # NodeOS barebones
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/NodeOS/nodeos-barebones.svg)](https://greenkeeper.io/)
+
 This package will compile both [Node.js](http://nodejs.org) and
 [Linux kernel](https://www.kernel.org/) using a cross-compiler for the desired
 target. Used alone, it will generate a Linux image that by default will boots to

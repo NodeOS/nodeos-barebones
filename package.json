@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "builddependencies": "^0.0.2",
-    "prebuild-install": "^2.2.2"
+    "prebuild-install": "^2.5.0"
   },
   "buildDependencies": [
     "barebonesos-linux",

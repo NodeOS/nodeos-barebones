@@ -28,7 +28,7 @@
     "minimist": "^1.2.0",
     "nodeos-cross-toolchain": "^1.0.0-RC3.1",
     "nodeos-nodejs": "^9.9.0",
-    "prebuild": "^7.4.0",
+    "prebuild": "^8.2.0",
     "qemu": "^2.9.0",
     "suppose": "^0.6.2"
   },
